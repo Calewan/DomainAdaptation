@@ -10,8 +10,6 @@ Created on Fri Jun  2 14:13:21 2023
 import logging
 import tensorflow as tf
 tf.get_logger().setLevel(logging.ERROR)
-from tensorflow.keras import Sequential, Model, regularizers
-from tensorflow.keras.layers import Dense, Flatten, Conv2D, Dropout, MaxPool2D, BatchNormalization, Dropout, Activation
 from tensorflow.keras.utils import to_categorical
 from data_creators import data_create, example_plotter
 from initialize_network import *
