@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-https://github.com/Calewan/DomainAdaptation/tree/main
 """
 Created on Fri Jun  2 14:13:21 2023
 
@@ -33,10 +33,10 @@ DA      = False          # True:  Domain Adaptation with DANN metric
                     # False: Source only Training or
 EPOCH   = 200
 # depth iterates from depth = l to depth = u-1
-# only values 1 to 10 defined
+# only depth values 1 to 10 are possible
 # depth $n$ creates a network with 2 feature extraction layers + $n$ dense layers
 l     = 1               # Lower bound depth
-u     = 2               # Upper bound depth
+u     = 11              # Upper bound depth
 plot_source_samples     = False # it does what you would think it does what it is called
 plot_target_samples     = False # it does what you would think it does what it is called
 plot_one_of_each_domain = True
