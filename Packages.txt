@@ -1,0 +1,10 @@
+# python 3.7.16
+
+Numpy 1.21.5
+Tensorflow 2.11.0
+Matplotlib 3.5.3
+Tensorflow 2.11.0
+SciKit Learn 1.0.2
+Scipy 1.7.3
+Seaborn 0.12.2
+h5py 3.8.0
