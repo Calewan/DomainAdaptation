@@ -16,27 +16,28 @@ from tensorflow.keras.utils import to_categorical
 from data_creators import data_create, example_plotter
 import numpy as np
 import matplotlib.pyplot as plt
-
+import os
 '''Parameters for DANN or Source only Network creation'''
 '''TODO add option to safe weights with timestamps -> no overwriting, less clutter and confusion'''
-safe_weights = True    # Safe the trained Networks? 
+save_weights = True    # Save the trained Networks? 
                         # !! Be careful !! to reduce file 
                         # overload saving overwrites old weights with the same setup
                         # 
 
 # domains       MNIST,nMNIST,nMNIST,cMNIST,lMNIST,rMNIST
 # num channels      1,     1,     3,     3,     3,     1.
-S       = [0]#[0,5,5,4] # Sopurce Domain for the experiments; each entry in [0,...,5] 
-DAA     = [1]#[1,2,4,5] # Target Domain for the experiment;   each entry in [0,...,5]
+S       = [0,5,5,4] # Sopurce Domain for the experiments; each entry in [0,...,5] 
+DAA     = [1,2,4,5] # Target Domain for the experiment;   each entry in [0,...,5]
 snr_s = 3           # Signal-to-Noise Ratio for MNIST-n
 angle = 45          # Rotation Angle for MNIST-r
 DA = False          # True:  Domain Adaptation with DANN metric 
-                    # False: Source only Training or
+                    # False: Source only Training 
+EPOCH = 200
 # depth iterates from depth = l to depth = u-1
 # only values 1 to 10 defined
 # depth $n$ creates a network with 2 feature extraction layers + $n$ dense layers
 l = 1               # Lower bound depth
-u = 2               # Upper bound depth
+u = 9               # Upper bound depth
 plot_source_samples     = False # it does what you would think it does what it is called
 plot_target_samples     = False # it does what you would think it does what it is called
 plot_one_of_each_domain = True
@@ -360,7 +361,6 @@ for depth in range(l,u):#s in [3]:
         target_domain  = DAA[i]
         source_domain   = S[i]
         BATCH_SIZE = 32
-        EPOCH = 200
         m = 28
         #%% Create and prepare Data
         mnist_train_x, mnist_train_y, mnist_test_x, mnist_test_y         = data_create(source_domain, source_domain, snr = snr_s, plotsamples = plot_source_samples)
@@ -503,10 +503,20 @@ for depth in range(l,u):#s in [3]:
         plt.plot(x_axis, test_acc, label="Domain Test Err")
         plt.plot(x_axis, test2_acc, label="Domain Train Err")
         plt.legend()
-        if safe_weights:
+        if save_weights:
             if DA:
+                path = "trained_networks_SourceOnly"
+                isExist = os.path.exists(path)
+                if not isExist:
+                    # Create a new directory because it does not exist
+                    os.makedirs(path)
                 model.save_weights('trained_networks_SourceOnly\DANN_S' + str(source_domain) +'_T' + str(target_domain) + '_d'+ str(depth)+ '_snr'+str(snr_s)+'da.h5')
             else:
+                path = "trained_networks_DomAdapt"
+                isExist = os.path.exists(path)
+                if not isExist:
+                    # Create a new directory because it does not exist
+                    os.makedirs(path)
                 model.save_weights('trained_networks_DomAdapt\DANN_S' + str(source_domain) + '_d'+ str(depth)+ '_snr'+str(snr_s)+'source.h5')
         print("iteration done")
         print("depth = {}, source = {}, target = {}".format(depth, source_domain, target_domain))
