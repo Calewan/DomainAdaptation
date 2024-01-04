@@ -219,10 +219,6 @@ class DANN(Model):
             feature_slice = feature
         else:
             feature_slice = tf.slice(feature, [0, 0], [feature.shape[0] // 2, -1])#input, begin,size(tatsächlich keine index zählung)
-            # nur von 1,1024 zu 0,1024?
-        #lp_x = self.label_predictor_layer0(feature_slice)
-        #lp_x = self.label_predictor_layer1(lp_x)
-        #l_logits = self.label_predictor_layer2(lp_x)
         if depth == 1:
             l_logits = self.label_predictor_layer0(feature_slice)
         elif depth == 2:
@@ -344,6 +340,12 @@ def get_loss(l_logits, labels, d_logits=None, domain=None):
                 b = loss_func(d_logits, domain)
                 return a + b
 
+epoch_accuracy = tf.keras.metrics.CategoricalAccuracy()
+def test_step(model, t_images, t_labels):
+                    images = t_images
+                    labels = t_labels
+                    output = model(images, train=False, source_train=True)
+                    epoch_accuracy(output, labels)
 '''
 MAIN: Initialize and train DANN in the loop
 
