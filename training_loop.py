@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-https://github.com/Calewan/DomainAdaptation/tree/main
 """
+Train DANN Models in the loop
+Set experiment domains with source, Target domain pairs
+TODO add option to safe weights with timestamps -> no overwriting, less clutter and confusion
 Created on Fri Jun  2 14:13:21 2023
 
 @author: savci
@@ -16,33 +19,34 @@ from initialize_network import *
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-'''Parameters for DANN or Source only Network creation'''
-'''TODO add option to safe weights with timestamps -> no overwriting, less clutter and confusion'''
+#Parameters for DANN or Source only Network creation
+
 save_weights = False    # Save the trained Networks? 
                         # !! Be careful !! to reduce file 
                         # overload saving overwrites old weights with the same setup
                         # 
+# Set Domains to train on
 
 # domains       MNIST,nMNIST,nMNIST,cMNIST,lMNIST,rMNIST
 # num channels      1,     1,     3,     3,     3,     1.
-S       = [0,5,5,4] # Sopurce Domain for the experiments; each entry in [0,...,5] 
-DAA     = [1,2,4,5] # Target Domain for the experiment;   each entry in [0,...,5]
-snr_s   = 3           # Signal-to-Noise Ratio for MNIST-n
-angle   = 45          # Rotation Angle for MNIST-r
-DA      = False          # True:  Domain Adaptation with DANN metric 
-                    # False: Source only Training or
+Sources       = [0,5,5,4]   # entry i: Source Domain for experiment i; each entry has to be in [0,...,5] 
+Targets       = [1,2,4,5]   # entry i: Target Domain for experiment i;   each entry has to be in [0,...,5]
+snr_s         = 3           # Signal-to-Noise Ratio for MNIST-n
+angle         = 45          # Rotation Angle for MNIST-r
+DA            = False       # True:  Domain Adaptation with DANN metric 
+                            # False: Source only Training or
 EPOCH   = 200
 # depth iterates from depth = l to depth = u-1
 # only depth values 1 to 10 are possible
 # depth $n$ creates a network with 2 feature extraction layers + $n$ dense layers
 l     = 1               # Lower bound depth
 u     = 11              # Upper bound depth
-plot_source_samples     = False # it does what you would think it does what it is called
-plot_target_samples     = False # it does what you would think it does what it is called
+plot_source_samples     = False # it does what you would think it does
+plot_target_samples     = False # it does what you would think it does
 plot_one_of_each_domain = True
 
 '''Assert correct parameters'''
-assert(len(S)   ==  len(DAA))
+assert(len(Sources)   ==  len(Targets))
 assert(0 <  l)
 assert(u <= 11)
 assert(l <  u)
@@ -53,20 +57,12 @@ if plot_one_of_each_domain:
     example_plotter(1,snr = snr_s, angle = angle)
 '''
 MAIN: Initialize and train DANN in the loop
-
 '''
 model_optimizer = tf.optimizers.legacy.SGD()
-print(0)
-for depth in range(l,u):
-    print(depth)
-for i in range(len(S)):
-    print(i)
 for depth in range(l,u):#s in [3]:
-    print(depth)
-    for i in range(len(S)):
-        print(i)
-        target_domain  = DAA[i]
-        source_domain   = S[i]
+    for i in range(len(Sources)):
+        target_domain   = Targets[i]
+        source_domain   = Sources[i]
         BATCH_SIZE = 32
         m = 28
         #%% Create and prepare Data
@@ -74,19 +70,11 @@ for depth in range(l,u):#s in [3]:
         mnist_m_train_x, mnist_m_train_y, mnist_m_test_x, mnist_m_test_y = data_create(target_domain, target_domain, snr = snr_s, plotsamples = plot_target_samples)
             #1D,1D,3D,3D,3D,1D
         Cha = [1,1,3,3,3,1]
-        '''Make all data 3-channel images'''
-        if DA == True:
-            if Cha[source_domain]   <   Cha[target_domain]:
+        '''Transform all data to 3-channel images'''
+        if Cha[source_domain]   <  3:
                 mnist_train_x     = np.repeat(mnist_train_x, 3, axis=3)
                 mnist_test_x      = np.repeat(mnist_test_x, 3, axis=3)
-            elif Cha[source_domain] >   Cha[target_domain]:
-                mnist_m_train_x   = np.repeat(mnist_m_train_x, 3, axis=3)
-                mnist_m_test_x    = np.repeat(mnist_m_test_x, 3, axis=3)
-        else:
-            if Cha[source_domain]   <  3:
-                mnist_train_x     = np.repeat(mnist_train_x, 3, axis=3)
-                mnist_test_x      = np.repeat(mnist_test_x, 3, axis=3)
-            if  Cha[target_domain] < 3:
+        if  Cha[target_domain] < 3:
                 mnist_m_train_x   = np.repeat(mnist_m_train_x, 3, axis=3)
                 mnist_m_test_x    = np.repeat(mnist_m_test_x, 3, axis=3)
         '''Make data tensorflowable'''
@@ -205,18 +193,18 @@ for depth in range(l,u):#s in [3]:
         plt.legend()
         if save_weights:
             if DA:
-                path = "trained_networks_SourceOnly"
-                isExist = os.path.exists(path)
-                if not isExist:
-                    # Create a new directory because it does not exist
-                    os.makedirs(path)
-                model.save_weights('trained_networks_SourceOnly\DANN_S' + str(source_domain) +'_T' + str(target_domain) + '_d'+ str(depth)+ '_snr'+str(snr_s)+'da.h5')
-            else:
                 path = "trained_networks_DomAdapt"
                 isExist = os.path.exists(path)
                 if not isExist:
                     # Create a new directory because it does not exist
                     os.makedirs(path)
-                model.save_weights('trained_networks_DomAdapt\DANN_S' + str(source_domain) + '_d'+ str(depth)+ '_snr'+str(snr_s)+'source.h5')
+                model.save_weights('trained_networks_DomAdapt\DANN_S' + str(source_domain) +'_T' + str(target_domain) + '_d'+ str(depth)+ '_snr'+str(snr_s)+'da.h5')
+            else:
+                path = "trained_networks_SourceOnly"
+                isExist = os.path.exists(path)
+                if not isExist:
+                    # Create a new directory because it does not exist
+                    os.makedirs(path)
+                model.save_weights('trained_networks_SourceOnly\DANN_S' + str(source_domain) + '_d'+ str(depth)+ '_snr'+str(snr_s)+'source.h5')
         print("iteration done")
         print("depth = {}, source = {}, target = {}".format(depth, source_domain, target_domain))
