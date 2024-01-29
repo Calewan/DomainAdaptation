@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+Define The DANN Network in Tensorflow
+
 Created on Thu Jan  4 12:42:39 2024
 
 @author: savci
@@ -9,11 +11,7 @@ import tensorflow as tf
 tf.get_logger().setLevel(logging.ERROR)
 from tensorflow.keras import  Model
 from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, BatchNormalization, Dropout
-#from tensorflow.keras.utils import to_categorical
-#from data_creators import data_create, example_plotter
-#import numpy as np
-#import matplotlib.pyplot as plt
-#import os
+
 #Gradient Reversal Layer
 @tf.custom_gradient
 def reverse_grad(x, grad_relaxation=1.0):
@@ -35,8 +33,9 @@ class GradientReversalLayer(tf.keras.layers.Layer):
 
 class DANN(Model):
     '''
-    Initialize a DANN Model with feature extraction  and different depth label classification networks
+    Initialize a DANN Model with feature extraction and different depth label classification networks
     TODO: Depth n initializes network of depth 3 + regularization. More shallow networks need to be hardcoded right now
+    CHECK: Can vectorize initialization with naming conventions of layers?
     '''
     def __init__(self, depth):
         super().__init__()
@@ -180,122 +179,118 @@ class DANN(Model):
             feature_slice = feature
         else:
             feature_slice = tf.slice(feature, [0, 0], [feature.shape[0] // 2, -1])#input, begin,size(tatsächlich keine index zählung)
-            # nur von 1,1024 zu 0,1024?
-        #lp_x = self.label_predictor_layer0(feature_slice)
-        #lp_x = self.label_predictor_layer1(lp_x)
-        #l_logits = self.label_predictor_layer2(lp_x)
         if depth == 1:
             l_logits    = self.label_predictor_layer0(feature_slice)
         elif depth == 2:
-            lp_x        = self.label_predictor_layer0(feature_slice)
-            l_logits    = self.label_predictor_layer1(lp_x)
+            rep         = self.label_predictor_layer0(feature_slice)
+            l_logits    = self.label_predictor_layer1(rep)
         elif depth == 3:    
-            lp_x        = self.label_predictor_layer0(feature_slice)
-            lp_x        = self.label_predictor_layer1(lp_x)
-            lp_x        = self.train_layer1(lp_x, training=train)
-            l_logits    = self.label_predictor_layer2(lp_x)
+            rep         = self.label_predictor_layer0(feature_slice)
+            rep         = self.label_predictor_layer1(rep)
+            rep         = self.train_layer1(rep, training=train)
+            l_logits    = self.label_predictor_layer2(rep)
         elif depth == 4:
-            lp_x        = self.label_predictor_layer0(feature_slice)
-            lp_x        = self.label_predictor_layer1(lp_x)
-            lp_x        = self.train_layer1(lp_x, training=train)
-            lp_x        = self.label_predictor_layer2(lp_x)
-            lp_x        = self.train_layer2(lp_x, training=train)
-            l_logits    = self.label_predictor_layer3(lp_x)
+            rep        = self.label_predictor_layer0(feature_slice)
+            rep        = self.label_predictor_layer1(rep)
+            rep        = self.train_layer1(rep, training=train)
+            rep        = self.label_predictor_layer2(rep)
+            rep        = self.train_layer2(rep, training=train)
+            l_logits    = self.label_predictor_layer3(rep)
         elif depth == 5:
-            lp_x        = self.label_predictor_layer0(feature_slice)
-            lp_x        = self.label_predictor_layer1(lp_x)
-            lp_x        = self.train_layer1(lp_x, training=train)
-            lp_x        = self.label_predictor_layer2(lp_x)
-            lp_x        = self.train_layer2(lp_x, training=train)
-            lp_x        = self.label_predictor_layer3(lp_x)
-            lp_x        = self.train_layer3(lp_x, training=train)
-            l_logits    = self.label_predictor_layer4(lp_x)
+            rep        = self.label_predictor_layer0(feature_slice)
+            rep        = self.label_predictor_layer1(rep)
+            rep        = self.train_layer1(rep, training=train)
+            rep        = self.label_predictor_layer2(rep)
+            rep        = self.train_layer2(rep, training=train)
+            rep        = self.label_predictor_layer3(rep)
+            rep        = self.train_layer3(rep, training=train)
+            l_logits    = self.label_predictor_layer4(rep)
         elif depth == 6:    
-            lp_x        = self.label_predictor_layer0(feature_slice)
-            lp_x        = self.label_predictor_layer1(lp_x)
-            lp_x        = self.train_layer1(lp_x, training=train)
-            lp_x        = self.label_predictor_layer2(lp_x)
-            lp_x        = self.train_layer2(lp_x, training=train)
-            lp_x        = self.label_predictor_layer3(lp_x)
-            lp_x        = self.train_layer3(lp_x, training=train)
-            lp_x        = self.label_predictor_layer4(lp_x)
-            lp_x        = self.train_layer4(lp_x, training=train)
-            l_logits    = self.label_predictor_layer5(lp_x)
+            rep        = self.label_predictor_layer0(feature_slice)
+            rep        = self.label_predictor_layer1(rep)
+            rep        = self.train_layer1(rep, training=train)
+            rep        = self.label_predictor_layer2(rep)
+            rep        = self.train_layer2(rep, training=train)
+            rep        = self.label_predictor_layer3(rep)
+            rep        = self.train_layer3(rep, training=train)
+            rep        = self.label_predictor_layer4(rep)
+            rep        = self.train_layer4(rep, training=train)
+            l_logits    = self.label_predictor_layer5(rep)
         elif depth == 7:
-            lp_x        = self.label_predictor_layer0(feature_slice)
-            lp_x        = self.label_predictor_layer1(lp_x)
-            lp_x        = self.train_layer1(lp_x, training=train)
-            lp_x        = self.label_predictor_layer2(lp_x)
-            lp_x        = self.train_layer2(lp_x, training=train)
-            lp_x        = self.label_predictor_layer3(lp_x)
-            lp_x        = self.train_layer3(lp_x, training=train)
-            lp_x        = self.label_predictor_layer4(lp_x)
-            lp_x        = self.train_layer4(lp_x, training=train)
-            lp_x        = self.label_predictor_layer5(lp_x)
-            lp_x        = self.train_layer5(lp_x, training=train)
-            l_logits    = self.label_predictor_layer6(lp_x)
+            rep        = self.label_predictor_layer0(feature_slice)
+            rep        = self.label_predictor_layer1(rep)
+            rep        = self.train_layer1(rep, training=train)
+            rep        = self.label_predictor_layer2(rep)
+            rep        = self.train_layer2(rep, training=train)
+            rep        = self.label_predictor_layer3(rep)
+            rep        = self.train_layer3(rep, training=train)
+            rep        = self.label_predictor_layer4(rep)
+            rep        = self.train_layer4(rep, training=train)
+            rep        = self.label_predictor_layer5(rep)
+            rep        = self.train_layer5(rep, training=train)
+            l_logits    = self.label_predictor_layer6(rep)
         elif depth == 8:
-            lp_x        = self.label_predictor_layer0(feature_slice)
-            lp_x        = self.label_predictor_layer1(lp_x)
-            lp_x        = self.train_layer1(lp_x, training=train)
-            lp_x        = self.label_predictor_layer2(lp_x)
-            lp_x        = self.train_layer2(lp_x, training=train)
-            lp_x        = self.label_predictor_layer3(lp_x)
-            lp_x        = self.train_layer3(lp_x, training=train)
-            lp_x        = self.label_predictor_layer4(lp_x)
-            lp_x        = self.train_layer4(lp_x, training=train)
-            lp_x        = self.label_predictor_layer5(lp_x)
-            lp_x        = self.train_layer5(lp_x, training=train)
-            lp_x        = self.label_predictor_layer6(lp_x)
-            lp_x        = self.train_layer6(lp_x, training=train)
-            l_logits    = self.label_predictor_layer7(lp_x)
+            rep        = self.label_predictor_layer0(feature_slice)
+            rep        = self.label_predictor_layer1(rep)
+            rep        = self.train_layer1(rep, training=train)
+            rep        = self.label_predictor_layer2(rep)
+            rep        = self.train_layer2(rep, training=train)
+            rep        = self.label_predictor_layer3(rep)
+            rep        = self.train_layer3(rep, training=train)
+            rep        = self.label_predictor_layer4(rep)
+            rep        = self.train_layer4(rep, training=train)
+            rep        = self.label_predictor_layer5(rep)
+            rep        = self.train_layer5(rep, training=train)
+            rep        = self.label_predictor_layer6(rep)
+            rep        = self.train_layer6(rep, training=train)
+            l_logits    = self.label_predictor_layer7(rep)
         elif depth == 9:    
-            lp_x        = self.label_predictor_layer0(feature_slice)
-            lp_x        = self.label_predictor_layer1(lp_x)
-            lp_x        = self.train_layer1(lp_x, training=train)
-            lp_x        = self.label_predictor_layer2(lp_x)
-            lp_x        = self.train_layer2(lp_x, training=train)
-            lp_x        = self.label_predictor_layer3(lp_x)
-            lp_x        = self.train_layer3(lp_x, training=train)
-            lp_x        = self.label_predictor_layer4(lp_x)
-            lp_x        = self.train_layer4(lp_x, training=train)
-            lp_x        = self.label_predictor_layer5(lp_x)
-            lp_x        = self.train_layer5(lp_x, training=train)
-            lp_x        = self.label_predictor_layer6(lp_x)
-            lp_x        = self.train_layer6(lp_x, training=train)
-            lp_x        = self.label_predictor_layer7(lp_x)
-            lp_x        = self.train_layer7(lp_x, training=train)
-            l_logits    = self.label_predictor_layer8(lp_x)
+            rep        = self.label_predictor_layer0(feature_slice)
+            rep        = self.label_predictor_layer1(rep)
+            rep        = self.train_layer1(rep, training=train)
+            rep        = self.label_predictor_layer2(rep)
+            rep        = self.train_layer2(rep, training=train)
+            rep        = self.label_predictor_layer3(rep)
+            rep        = self.train_layer3(rep, training=train)
+            rep        = self.label_predictor_layer4(rep)
+            rep        = self.train_layer4(rep, training=train)
+            rep        = self.label_predictor_layer5(rep)
+            rep        = self.train_layer5(rep, training=train)
+            rep        = self.label_predictor_layer6(rep)
+            rep        = self.train_layer6(rep, training=train)
+            rep        = self.label_predictor_layer7(rep)
+            rep        = self.train_layer7(rep, training=train)
+            l_logits    = self.label_predictor_layer8(rep)
         elif depth == 10:    
-            lp_x        = self.label_predictor_layer0(feature_slice)
-            lp_x        = self.label_predictor_layer1(lp_x)
-            lp_x        = self.train_layer1(lp_x, training=train)
-            lp_x        = self.label_predictor_layer2(lp_x)
-            lp_x        = self.train_layer2(lp_x, training=train)
-            lp_x        = self.label_predictor_layer3(lp_x)
-            lp_x        = self.train_layer3(lp_x, training=train)
-            lp_x        = self.label_predictor_layer4(lp_x)
-            lp_x        = self.train_layer4(lp_x, training=train)
-            lp_x        = self.label_predictor_layer5(lp_x)
-            lp_x        = self.train_layer5(lp_x, training=train)
-            lp_x        = self.label_predictor_layer6(lp_x)
-            lp_x        = self.train_layer6(lp_x, training=train)
-            lp_x        = self.label_predictor_layer7(lp_x)
-            lp_x        = self.train_layer7(lp_x, training=train)
-            lp_x        = self.label_predictor_layer8(lp_x)
-            lp_x        = self.train_layer8(lp_x, training=train)
-            l_logits    = self.label_predictor_layer9(lp_x)
+            rep        = self.label_predictor_layer0(feature_slice)
+            rep        = self.label_predictor_layer1(rep)
+            rep        = self.train_layer1(rep, training=train)
+            rep        = self.label_predictor_layer2(rep)
+            rep        = self.train_layer2(rep, training=train)
+            rep        = self.label_predictor_layer3(rep)
+            rep        = self.train_layer3(rep, training=train)
+            rep        = self.label_predictor_layer4(rep)
+            rep        = self.train_layer4(rep, training=train)
+            rep        = self.label_predictor_layer5(rep)
+            rep        = self.train_layer5(rep, training=train)
+            rep        = self.label_predictor_layer6(rep)
+            rep        = self.train_layer6(rep, training=train)
+            rep        = self.label_predictor_layer7(rep)
+            rep        = self.train_layer7(rep, training=train)
+            rep        = self.label_predictor_layer8(rep)
+            rep        = self.train_layer8(rep, training=train)
+            l_logits    = self.label_predictor_layer9(rep)
         #Domain Predictor
         if source_train is True:
             return l_logits
         else:
-            dp_x        = self.domain_predictor_layer0(feature, lamda)    #GradientReversalLayer
-            dp_x        = self.domain_predictor_layer1(dp_x)
-            d_logits    = self.domain_predictor_layer2(dp_x)
+            dom_rep     = self.domain_predictor_layer0(feature, lamda)    #GradientReversalLayer
+            dom_rep     = self.domain_predictor_layer1(dom_rep)
+            d_logits    = self.domain_predictor_layer2(dom_rep)
             return l_logits, d_logits
         
-def loss_func(input_logits, target_labels):
-            return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=input_logits, labels=target_labels))
+def loss_func(prediction, labels):
+            return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=labels))
         
 def get_loss(l_logits, labels, d_logits=None, domain=None):
             if d_logits is None:
@@ -305,8 +300,6 @@ def get_loss(l_logits, labels, d_logits=None, domain=None):
                 b = loss_func(d_logits, domain)
                 return a + b
 epoch_accuracy = tf.keras.metrics.CategoricalAccuracy()
-def test_step(model, t_images, t_labels):
-                    images = t_images
-                    labels = t_labels
-                    output = model(images, train=False, source_train=True)
-                    epoch_accuracy(output, labels)
+def test_step(model, test_X, test_y):
+                    pred_y = model(test_X, train=False, source_train=True)
+                    epoch_accuracy(pred_y, test_y)
