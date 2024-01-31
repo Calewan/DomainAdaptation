@@ -10,8 +10,8 @@ TODOS:
     
     - Clean up File 'vis_tools.py'
     
-    - Write about Contents/Mth
+    - Write README, mainly about Contents/Mth
     
-    - Add Plots
+    - Add nice plots to readme
     
 ____________________________
