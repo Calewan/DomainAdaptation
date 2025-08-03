@@ -1,10 +1,10 @@
 # DomainAdaptation Master's Thesis
-A Tool to do simple Domain Adaptation task.
+Raw Scripts used to do experiments in the context of my Master's Thesis. No fletched out Programm just some Deep Neural Networks and some Plotting.
 
 Compare DANN to regularly trained ANNs
 
 ____________________________
-TODOS:
+Some possible todos:
 
     - add Better Plotting of Disentanglements to vis_tools.visualizer()
     
